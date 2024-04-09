@@ -11,54 +11,52 @@ DigitalOut led1(LED1); // led port zuweisung
 DigitalOut led2(D2);
 DigitalOut led3(D3);
 
-Mutex counter_mutex; // Mutex angelegen  !!Mutex muss immer an allen stellen der verwendeten Variable stehen.
+//------------------------------------------------------------------------------
+#define Flag_1 0x1
+#define Flag_2 0x2
+#define Flag_3 0x3
+
+EventFlags event_flag;
 
 
 
-uint16_t counter = 0; // shared mem
+
+
 
 void Task_1(void)
 {
     while(1)
     {
-    ThisThread::sleep_for(200ms);
-    counter_mutex.lock();
-    counter++;
-    counter_mutex.unlock();
+    event_flag.set(Flag_1);   
+    ThisThread::sleep_for(1000ms);
+    event_flag.set(Flag_2);   
+    ThisThread::sleep_for(2000ms);
+    event_flag.set(Flag_3);   
+    ThisThread::sleep_for(3000ms);
+    
     }
 }
 
 void Task_2(void)
     {
+
+        uint32_t flag_read=0;
     while(1)
         {   
-            counter_mutex.lock(); // mutex (counter) für andere Threads sperren
-            if(counter % 3 == 0)
-            {
-                led2 = !led2;
-              
-            }     
-           // ThisThread::sleep_for(5000ms); // thread schläft 5000ms  So nicht ! Alle TASKs warten auf Freigabe des Mutex !!!!
-              counter_mutex.unlock(); // mutex freigeben 
+            flag_read=event_flag.wait_any(0x07); // Warte bis ein Flag gesetzt ist
+
+            switch (flag_read) {
+            case Flag_1: led1=!led1; break;
+	        case Flag_2: led2=!led2; break;
+	        case Flag_3: led3=!led3; break;
+	        default: break;
+            }
             
+
+           // ThisThread::sleep_for(200ms);
         }    
     }
 
-void Task_3(void)
-    {
-    while(1)
-        {   
-            counter_mutex.lock(); // mutex (counter) für andere Threads sperren
-            if(counter % 7 == 0)
-            {
-                led3 = !led3;
-                
-            }     
-            
-             counter_mutex.unlock(); // mutex freigeben 
-             
-        }    
-    }
 
 
 int main() {
@@ -68,14 +66,11 @@ int main() {
         Thread t_task_2(osPriorityNormal,OS_STACK_SIZE,NULL,NULL);
         t_task_2.start(Task_2);
 
-        Thread t_task_3(osPriorityNormal,OS_STACK_SIZE,NULL,NULL);
-        t_task_3.start(Task_3);
-        
-        
+  
        
         while(true)
         {
-           led1 = !led1;
+           // tue nichts
            ThisThread::sleep_for(2000ms);
         }
        
