@@ -8,8 +8,8 @@
 
 
 DigitalOut led1(LED1); // led port zuweisung
-DigitalOut led2(D2);
-DigitalOut led3(D3);
+DigitalOut led2(LED2);
+DigitalOut led3(LED3);
 
 //------------------------------------------------------------------------------
 #define Flag_1 0x1
@@ -43,7 +43,7 @@ void Task_2(void)
         uint32_t flag_read=0;
     while(1)
         {   
-            flag_read=event_flag.wait_any(0x07); // Warte bis ein Flag gesetzt ist
+            flag_read=event_flag.wait_any(Flag_1|Flag_2|Flag_3); // 0b00001110  oder 0x07 oder 0x01|0x02|0x03// Warte bis ein Flag gesetzt ist
 
             switch (flag_read) {
             case Flag_1: led1=!led1; break;
@@ -73,6 +73,10 @@ int main() {
            // tue nichts
            ThisThread::sleep_for(2000ms);
         }
+
+        //oder
+       // t_task_1.join();
+     //t_task_2.join();
        
     }
 
